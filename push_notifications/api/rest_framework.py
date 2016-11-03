@@ -54,7 +54,7 @@ class DeviceSerializerMixin(ModelSerializer):
 	mute_for = TimerField(source="muted_till")
 	
 	class Meta:
-		fields = ("id", "name", "registration_id", "device_id", "active", "date_created", "muted_for")
+		fields = ("id", "name", "registration_id", "device_id", "active", "date_created", "mute_for")
 		read_only_fields = ("date_created",)
 
 		# See https://github.com/tomchristie/django-rest-framework/issues/1101
