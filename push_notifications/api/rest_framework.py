@@ -38,15 +38,15 @@ class TimerField(DurationField):
 	Takes input in seconds or DRF's DurationFieldFormat, returns offset in seconds
 	If stored DateTime is in the past, return None
 	"""
-    def to_representation(self, value):
-        if value < timezone.now():
-            return None
-        value = value - timezone.now()
-        return value.total_seconds()
+	def to_representation(self, value):
+		if value < timezone.now():
+			return None
+		value = value - timezone.now()
+		return value.total_seconds()
 
-    def to_internal_value(self, value):
-        val = super().to_internal_value(value)
-        return val + timezone.now()
+	def to_internal_value(self, value):
+		val = super().to_internal_value(value)
+		return val + timezone.now()
 
 
 # Serializers
