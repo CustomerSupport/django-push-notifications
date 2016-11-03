@@ -19,6 +19,9 @@ class Device(models.Model):
 	date_created = models.DateTimeField(
 		verbose_name=_("Creation date"), auto_now_add=True, null=True
 	)
+	muted_till = models.DateTimeField(blank=True, default=timezone.now,
+                                      help_text="Date/Time to mute notifications until")
+
 
 	class Meta:
 		abstract = True
