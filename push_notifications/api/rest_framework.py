@@ -51,7 +51,7 @@ class TimerField(DurationField):
 
 # Serializers
 class DeviceSerializerMixin(ModelSerializer):
-	mute_for = TimerField(source="muted_till")
+	mute_for = TimerField(source="muted_till", required=False)
 	
 	class Meta:
 		fields = ("id", "name", "registration_id", "device_id", "active", "date_created", "mute_for")
