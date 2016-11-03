@@ -95,7 +95,7 @@ class OverwriteRegistrationSerializerMixin(Serializer):
 		return attrs
 
 
-class APNSDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
+class APNSDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerializerMixin):
 	class Meta(DeviceSerializerMixin.Meta):
 		model = APNSDevice
 
@@ -140,7 +140,7 @@ class UniqueRegistrationSerializerMixin(Serializer):
 		return attrs
 
 
-class GCMDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
+class GCMDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerializerMixin):
 	device_id = HexIntegerField(
 		help_text="ANDROID_ID / TelephonyManager.getDeviceId() (e.g: 0x01)",
 		style={"input_type": "text"},
@@ -160,7 +160,7 @@ class GCMDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer)
 		return value
 
 
-class WNSDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
+class WNSDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerializerMixin):
 	class Meta(DeviceSerializerMixin.Meta):
 		model = WNSDevice
 
