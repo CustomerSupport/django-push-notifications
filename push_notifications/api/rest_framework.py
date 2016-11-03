@@ -1,9 +1,10 @@
 from __future__ import absolute_import
+from django.utils import timezone
 
 from rest_framework import permissions
 from rest_framework.serializers import Serializer, ModelSerializer, ValidationError
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.fields import IntegerField
+from rest_framework.fields import IntegerField, DurationField
 
 from push_notifications.models import APNSDevice, GCMDevice, WNSDevice
 from push_notifications.fields import hex_re
@@ -31,10 +32,29 @@ class HexIntegerField(IntegerField):
 		return value
 
 
+class TimerField(DurationField):
+	"""
+	Stores an offset from the current time in a DateTimeField.
+	Takes input in seconds or DRF's DurationFieldFormat, returns offset in seconds
+	If stored DateTime is in the past, return None
+	"""
+    def to_representation(self, value):
+        if value < timezone.now():
+            return None
+        value = value - timezone.now()
+        return value.total_seconds()
+
+    def to_internal_value(self, value):
+        val = super().to_internal_value(value)
+        return val + timezone.now()
+
+
 # Serializers
 class DeviceSerializerMixin(ModelSerializer):
+	mute_for = TimerField(source="muted_till")
+	
 	class Meta:
-		fields = ("id", "name", "registration_id", "device_id", "active", "date_created")
+		fields = ("id", "name", "registration_id", "device_id", "active", "date_created", "muted_for")
 		read_only_fields = ("date_created",)
 
 		# See https://github.com/tomchristie/django-rest-framework/issues/1101
