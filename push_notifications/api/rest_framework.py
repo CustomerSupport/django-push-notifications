@@ -61,7 +61,41 @@ class DeviceSerializerMixin(ModelSerializer):
 		extra_kwargs = {"active": {"default": True}}
 
 
-class APNSDeviceSerializer(ModelSerializer):
+class OverwriteRegistrationSerializerMixin(Serializer):
+	"""
+	If the registration_id is already in use, delete that device
+	If someone were to logout of the app without internet and then log in to a different account
+	this makes sure they are able to get notifications
+	"""
+	def validate(self, attrs):
+		devices = None
+		primary_key = None
+		request_method = None
+
+		if self.initial_data.get("registration_id", None):
+			if self.instance:
+				request_method = "update"
+				primary_key = self.instance.id
+			else:
+				request_method = "create"
+		else:
+			if self.context["request"].method in ["PUT", "PATCH"]:
+				request_method = "update"
+				primary_key = attrs["id"]
+			elif self.context["request"].method == "POST":
+				request_method = "create"
+
+		Device = self.Meta.model
+		if request_method == "update":
+			devices = Device.objects.filter(registration_id=attrs["registration_id"]) \
+				.exclude(id=primary_key).delete()
+		elif request_method == "create":
+			devices = Device.objects.filter(registration_id=attrs["registration_id"]).delete()
+
+		return attrs
+
+
+class APNSDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
 	class Meta(DeviceSerializerMixin.Meta):
 		model = APNSDevice
 
@@ -106,7 +140,7 @@ class UniqueRegistrationSerializerMixin(Serializer):
 		return attrs
 
 
-class GCMDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
+class GCMDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
 	device_id = HexIntegerField(
 		help_text="ANDROID_ID / TelephonyManager.getDeviceId() (e.g: 0x01)",
 		style={"input_type": "text"},
@@ -126,7 +160,7 @@ class GCMDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
 		return value
 
 
-class WNSDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
+class WNSDeviceSerializer(OverwriteRegistrationSerializerMixin, ModelSerializer):
 	class Meta(DeviceSerializerMixin.Meta):
 		model = WNSDevice
 
