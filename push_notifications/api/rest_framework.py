@@ -72,25 +72,26 @@ class OverwriteRegistrationSerializerMixin(Serializer):
 		primary_key = None
 		request_method = None
 
-		if self.initial_data.get("registration_id", None):
-			if self.instance:
-				request_method = "update"
-				primary_key = self.instance.id
+		if 'registration_id' in attrs:		# Only validate registration_id if it's present
+			if self.initial_data.get("registration_id", None):
+				if self.instance:
+					request_method = "update"
+					primary_key = self.instance.id
+				else:
+					request_method = "create"
 			else:
-				request_method = "create"
-		else:
-			if self.context["request"].method in ["PUT", "PATCH"]:
-				request_method = "update"
-				primary_key = attrs["id"]
-			elif self.context["request"].method == "POST":
-				request_method = "create"
+				if self.context["request"].method in ["PUT", "PATCH"]:
+					request_method = "update"
+					primary_key = self.instance.id
+				elif self.context["request"].method == "POST":
+					request_method = "create"
 
-		Device = self.Meta.model
-		if request_method == "update":
-			devices = Device.objects.filter(registration_id=attrs["registration_id"]) \
-				.exclude(id=primary_key).delete()
-		elif request_method == "create":
-			devices = Device.objects.filter(registration_id=attrs["registration_id"]).delete()
+			Device = self.Meta.model
+			if request_method == "update":
+				devices = Device.objects.filter(registration_id=attrs["registration_id"]) \
+					.exclude(id=primary_key).delete()
+			elif request_method == "create":
+				devices = Device.objects.filter(registration_id=attrs["registration_id"]).delete()
 
 		return attrs
 
@@ -107,37 +108,6 @@ class APNSDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerialize
 			raise ValidationError("Registration ID (device token) is invalid")
 
 		return value
-
-
-class UniqueRegistrationSerializerMixin(Serializer):
-	def validate(self, attrs):
-		devices = None
-		primary_key = None
-		request_method = None
-
-		if self.initial_data.get("registration_id", None):
-			if self.instance:
-				request_method = "update"
-				primary_key = self.instance.id
-			else:
-				request_method = "create"
-		else:
-			if self.context["request"].method in ["PUT", "PATCH"]:
-				request_method = "update"
-				primary_key = attrs["id"]
-			elif self.context["request"].method == "POST":
-				request_method = "create"
-
-		Device = self.Meta.model
-		if request_method == "update":
-			devices = Device.objects.filter(registration_id=attrs["registration_id"]) \
-				.exclude(id=primary_key)
-		elif request_method == "create":
-			devices = Device.objects.filter(registration_id=attrs["registration_id"])
-
-		if devices:
-			raise ValidationError({'registration_id': 'This field must be unique.'})
-		return attrs
 
 
 class GCMDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerializerMixin):
