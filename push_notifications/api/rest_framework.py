@@ -99,6 +99,9 @@ class OverwriteRegistrationSerializerMixin(Serializer):
 class APNSDeviceSerializer(OverwriteRegistrationSerializerMixin, DeviceSerializerMixin):
 	class Meta(DeviceSerializerMixin.Meta):
 		model = APNSDevice
+		extra_kwargs = {
+			"registration_id": { "validators": [], },
+		}
 
 	def validate_registration_id(self, value):
 		# iOS device tokens are 256-bit hexadecimal (64 characters). In 2016 Apple is increasing
