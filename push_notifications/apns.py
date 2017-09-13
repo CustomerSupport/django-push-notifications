@@ -273,7 +273,16 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 				print('try (%d, %d)'%(identifier, registration_id))
 				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
 				print('message sent (%d, %d)'%(identifier, registration_id))
-			except:
+			except ConnectionResetError:
+				print('exception (%d, %d)'%(identifier, registration_id))
+				# Failed to send, assume the socket died.
+				socket.close()
+				print('socket closed (%d, %d)'%(identifier, registration_id))
+				socket = _apns_create_socket_to_push(certfile)
+				print('socket reopened (%d, %d)'%(identifier, registration_id))
+				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+				print('message sent (__2__) (%d, %d)'%(identifier, registration_id))
+			except BrokenPipeError:
 				print('exception (%d, %d)'%(identifier, registration_id))
 				# Failed to send, assume the socket died.
 				socket.close()
