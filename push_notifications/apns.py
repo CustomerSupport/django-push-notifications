@@ -264,6 +264,7 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	"""
 	certfile = kwargs.get("certfile", None)
 	socket = _apns_create_socket_to_push(certfile)
+	res = None
 	print('created socket %s'%(str(socket)))
 	try:
 		for identifier, registration_id in enumerate(registration_ids):
