@@ -263,7 +263,8 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	to this for silent notifications.
 	"""
 	certfile = kwargs.get("certfile", None)
-	with closing(_apns_create_socket_to_push(certfile)) as socket:
+	socket = _apns_create_socket_to_push(certfile)
+	try:
 		for identifier, registration_id in enumerate(registration_ids):
 			try:
 				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
@@ -273,7 +274,11 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 				socket = _apns_create_socket_to_push()
 				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
 		_apns_check_errors(socket)
-		return res
+	except:
+		pass
+	finally:
+		socket.close()
+	return res
 
 
 def apns_fetch_inactive_ids(certfile=None):
