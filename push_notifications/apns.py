@@ -267,29 +267,29 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	res = None
 	print('created socket %s'%(str(socket)))
 	for identifier, registration_id in enumerate(registration_ids):
-		print('for device with id %d and reg_id %d'%(identifier, registration_id))
+		print('for device with id %d and reg_id %s'%(identifier, registration_id))
 		try:
-			print('try (%d, %d)'%(identifier, registration_id))
+			print('try (%d, %s)'%(identifier, registration_id))
 			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (%d, %d)'%(identifier, registration_id))
+			print('message sent (%d, %s)'%(identifier, registration_id))
 		except ConnectionResetError:
-			print('exception (%d, %d)'%(identifier, registration_id))
+			print('exception (%d, %s)'%(identifier, registration_id))
 			# Failed to send, assume the socket died.
 			socket.close()
-			print('socket closed (%d, %d)'%(identifier, registration_id))
+			print('socket closed (%d, %s)'%(identifier, registration_id))
 			socket = _apns_create_socket_to_push(certfile)
-			print('socket reopened (%d, %d)'%(identifier, registration_id))
+			print('socket reopened (%d, %s)'%(identifier, registration_id))
 			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (__2__) (%d, %d)'%(identifier, registration_id))
+			print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
 		except BrokenPipeError:
-			print('exception (%d, %d)'%(identifier, registration_id))
+			print('exception (%d, %s)'%(identifier, registration_id))
 			# Failed to send, assume the socket died.
 			socket.close()
-			print('socket closed (%d, %d)'%(identifier, registration_id))
+			print('socket closed (%d, %s)'%(identifier, registration_id))
 			socket = _apns_create_socket_to_push(certfile)
-			print('socket reopened (%d, %d)'%(identifier, registration_id))
+			print('socket reopened (%d, %s)'%(identifier, registration_id))
 			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (__2__) (%d, %d)'%(identifier, registration_id))
+			print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
 	_apns_check_errors(socket)
 	socket.close()
 	print('finally close socket ')
