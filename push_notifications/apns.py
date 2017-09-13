@@ -265,7 +265,13 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	certfile = kwargs.get("certfile", None)
 	with closing(_apns_create_socket_to_push(certfile)) as socket:
 		for identifier, registration_id in enumerate(registration_ids):
-			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+			try:
+				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+			except:
+				# Failed to send, assume the socket died.
+				socket.close()
+				socket = _apns_create_socket_to_push()
+				res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
 		_apns_check_errors(socket)
 		return res
 
