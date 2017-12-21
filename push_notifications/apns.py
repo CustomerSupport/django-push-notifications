@@ -263,35 +263,40 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	to this for silent notifications.
 	"""
 	certfile = kwargs.get("certfile", None)
-	socket = _apns_create_socket_to_push(certfile)
-	res = None
-	print('created socket %s'%(str(socket)))
-	for identifier, registration_id in enumerate(registration_ids):
-		print('for device with id %d and reg_id %s'%(identifier, registration_id))
+	while True:
+		socket = _apns_create_socket_to_push(certfile)
+		res = None
 		try:
-			print('try (%d, %s)'%(identifier, registration_id))
-			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (%d, %s)'%(identifier, registration_id))
-		except ConnectionResetError:
-			print('exception (%d, %s)'%(identifier, registration_id))
-			# Failed to send, assume the socket died.
+			for identifier, registration_id in enumerate(registration_ids):
+				print('for device with id %d and reg_id %s'%(identifier, registration_id))
+				try:
+					print('try (%d, %s)'%(identifier, registration_id))
+					res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+					print('message sent (%d, %s)'%(identifier, registration_id))
+				except ConnectionResetError:
+					print('exception (%d, %s)'%(identifier, registration_id))
+					# Failed to send, assume the socket died.
+					socket.close()
+					print('socket closed (%d, %s)'%(identifier, registration_id))
+					socket = _apns_create_socket_to_push(certfile)
+					print('socket reopened (%d, %s)'%(identifier, registration_id))
+					res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+					print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
+				except BrokenPipeError:
+					print('exception (%d, %s)'%(identifier, registration_id))
+					# Failed to send, assume the socket died.
+					socket.close()
+					print('socket closed (%d, %s)'%(identifier, registration_id))
+					socket = _apns_create_socket_to_push(certfile)
+					print('socket reopened (%d, %s)'%(identifier, registration_id))
+					res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+					print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
+			_apns_check_errors(socket)
 			socket.close()
-			print('socket closed (%d, %s)'%(identifier, registration_id))
-			socket = _apns_create_socket_to_push(certfile)
-			print('socket reopened (%d, %s)'%(identifier, registration_id))
-			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
-		except BrokenPipeError:
-			print('exception (%d, %s)'%(identifier, registration_id))
-			# Failed to send, assume the socket died.
+			break
+		except APNSServerError as err:
+			registration_ids.pop(int(err.args[1]))
 			socket.close()
-			print('socket closed (%d, %s)'%(identifier, registration_id))
-			socket = _apns_create_socket_to_push(certfile)
-			print('socket reopened (%d, %s)'%(identifier, registration_id))
-			res = _apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
-			print('message sent (__2__) (%d, %s)'%(identifier, registration_id))
-	_apns_check_errors(socket)
-	socket.close()
 	print('finally close socket ')
 	return res
 
