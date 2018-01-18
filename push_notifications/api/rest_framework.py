@@ -52,7 +52,7 @@ class TimerField(DurationField):
 # Serializers
 class DeviceSerializerMixin(ModelSerializer):
 	mute_for = TimerField(source="muted_till", required=False)
-	
+
 	class Meta:
 		fields = ("id", "name", "registration_id", "device_id", "active", "date_created", "mute_for")
 		read_only_fields = ("date_created",)
@@ -68,11 +68,13 @@ class OverwriteRegistrationSerializerMixin(Serializer):
 	this makes sure they are able to get notifications
 	"""
 	def validate(self, attrs):
+		print(">>>>>validation for registration id has been started")
 		devices = None
 		primary_key = None
 		request_method = None
 
 		if 'registration_id' in attrs:		# Only validate registration_id if it's present
+			print(">>>>>registration id %s is in params"%(attrs['registration_id']))
 			if self.initial_data.get("registration_id", None):
 				if self.instance:
 					request_method = "update"
@@ -86,11 +88,29 @@ class OverwriteRegistrationSerializerMixin(Serializer):
 				elif self.context["request"].method == "POST":
 					request_method = "create"
 
+			if self.instance:
+				print("self.instance.id <<< %s"%(str(self.instance.id)))
+			print("self.context[\"request\"].method <<< %s"%(str(self.context["request"].method)))
+			print("self.context[\"request\"] <<< %s"%(str(self.context["request"])))
+			print("self.context <<< %s"%(str(self.context)))
+			print("self <<< %s"%(str(self)))
+
 			Device = self.Meta.model
 			if request_method == "update":
+				print(">>> Next devices have been removed:")
+				for device in Device.objects.filter(registration_id=attrs["registration_id"]) \
+					.exclude(id=primary_key):
+					print("%s < %s < %s"%(str(device.id), device.registration_id, device.user.username))
+				print("<<<<<<<<<")
+
 				devices = Device.objects.filter(registration_id=attrs["registration_id"]) \
 					.exclude(id=primary_key).delete()
 			elif request_method == "create":
+				print(">>> Next devices have been removed:")
+				for device in Device.objects.filter(registration_id=attrs["registration_id"]):
+					print("%s < %s < %s"%(str(device.id), device.registration_id, device.user.username))
+				print("<<<<<<<<<")
+
 				devices = Device.objects.filter(registration_id=attrs["registration_id"]).delete()
 
 		return attrs
