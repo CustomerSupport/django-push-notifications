@@ -295,7 +295,7 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 			socket.close()
 			break
 		except APNSServerError as err:
-			registration_ids.pop(int(err.args[1]))
+			registration_ids = registration_ids[int(err.args[1]) + 1:]
 			socket.close()
 	print('finally close socket ')
 	return res
