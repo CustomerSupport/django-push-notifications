@@ -262,6 +262,7 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	it won't be included in the notification. You will need to pass None
 	to this for silent notifications.
 	"""
+	registration_ids = sorted(registration_ids)
 	certfile = kwargs.get("certfile", None)
 	while True:
 		socket = _apns_create_socket_to_push(certfile)
